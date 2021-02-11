@@ -10,6 +10,15 @@ class RateDetector
     end
   end
 
+  class ValueChange
+    attr_reader :first, :second
+    def initialize(first, second)
+      @first = first
+      @second = second
+    end
+  end
+
+
   class << self
 
     def parse(csv)
@@ -20,6 +29,9 @@ class RateDetector
 
     def call(max_rate_change, input_csv)
       input_array = parse(input_csv)
+      volume_changes = input_array.each_slice(2).map do |first, second|
+        ValueChange.new(first, second)
+      end
     end
   end
 end
