@@ -17,12 +17,24 @@ class RateDetector
       @second = second
       @change_per_minute = 0
       if first && second
-        @change_per_minute = (second.volume-first.volume).to_f/(second.timestamp-first.timestamp)*60
+        @change_per_minute = ((second.volume-first.volume).to_f/(second.timestamp-first.timestamp)*60).abs
       end
+    end
+
+    def self.header
+      "Start Timestamp,End Timestamp,Start Volume,End Volume\n"
     end
 
     def change_over(max)
       @change_per_minute>max
+    end
+
+    def as_csv
+      "%s,%s,%d,%d\n" % [
+        first.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        second.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        first.volume,
+        second.volume]
     end
   end
 
@@ -50,12 +62,14 @@ class RateDetector
       merge_consecutive = changes_over_max.reduce([]) do |acc, row|
         if acc.last&.second&.timestamp == row.first.timestamp
           # Merge this with last
-          acc.last = ValueCharge.new(acc.last.first, row.last.second)
+          acc.last = ValueChange.new(acc.last.first, row.last.second)
         else
           acc.push row
         end
         acc
       end
+
+      output_csv = ValueChange.header+merge_consecutive.map(&:as_csv).join
     end
   end
 end

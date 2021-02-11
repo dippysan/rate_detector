@@ -42,7 +42,7 @@ RSpec.describe 'integration' do
 
     it "Example 3 - volume.csv" do
 
-      input = CSV.read('./volumes.csv')
+      input = File.read('./volumes.csv')
 
       output = <<~CSV
         Start Timestamp,End Timestamp,Start Volume,End Volume
