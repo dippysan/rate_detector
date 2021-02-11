@@ -1,8 +1,8 @@
-require_relative '../src/rate_detector'
 require 'spec_helper'
 require 'csv'
 
 RSpec.describe 'integration' do
+  require_relative '../src/rate_detector'
 
   describe RateDetector do
 

@@ -1,4 +1,5 @@
 require 'time'
+require 'csv'
 
 class RateDetector
 
@@ -26,7 +27,7 @@ class RateDetector
     end
 
     def change_over(max)
-      @change_per_minute>max
+      @change_per_minute>max.to_i
     end
 
     def as_csv
@@ -58,13 +59,13 @@ class RateDetector
       changes_over_max = volume_changes.select {|v| v.change_over(max_rate_change)}
 
       # Merge consecutive rows
-      merge_consecutive = changes_over_max.reduce([]) do |acc, row|
+      merge_consecutive = changes_over_max.reduce([]) do |acc, current|
         prev = acc.last
-        if prev&.second&.timestamp == row.first.timestamp
+        if prev&.second&.timestamp == current.first.timestamp
           # Merge this with last
-          acc[-1] = ValueChange.new(prev.first, row.second)
+          acc[-1] = ValueChange.new(prev.first, current.second)
         else
-          acc.push row
+          acc.push current
         end
         acc
       end
@@ -74,3 +75,11 @@ class RateDetector
   end
 end
 
+# Run from command line
+if !ENV['RACK_ENV']
+  raise "Usage: ./rate_detector.rb <csv_file> <rate_of_change>" if ARGV.length<2
+
+  max_rate_change = ARGV[1].to_i
+  csv = File.read(ARGV[0])
+  puts RateDetector.call(max_rate_change, csv)
+end
