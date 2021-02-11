@@ -6,7 +6,7 @@ class RateDetector
     attr_reader :timestamp, :volume
     def initialize(timestamp, volume)
       @timestamp = Time.parse(timestamp)
-      @volume = volume
+      @volume = volume.to_f
     end
   end
 
@@ -15,6 +15,14 @@ class RateDetector
     def initialize(first, second)
       @first = first
       @second = second
+      @change_per_minute = 0
+      if first && second
+        @change_per_minute = (second.volume-first.volume).to_f/(second.timestamp-first.timestamp)*60
+      end
+    end
+
+    def change_over(max)
+      @change_per_minute>max
     end
   end
 
@@ -32,6 +40,7 @@ class RateDetector
       volume_changes = input_array.each_slice(2).map do |first, second|
         ValueChange.new(first, second)
       end
+      changes_over_max = volume_changes.select {|v| v.change_over(max_rate_change)}
     end
   end
 end
