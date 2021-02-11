@@ -37,10 +37,25 @@ class RateDetector
 
     def call(max_rate_change, input_csv)
       input_array = parse(input_csv)
+
       volume_changes = input_array.each_slice(2).map do |first, second|
         ValueChange.new(first, second)
       end
+      volume_changes.pop # Ignore last entry, which has no .second value
+
+      # Keep only where the volume changes are over max_rate_change
       changes_over_max = volume_changes.select {|v| v.change_over(max_rate_change)}
+
+      # Merge consecutive rows
+      merge_consecutive = changes_over_max.reduce([]) do |acc, row|
+        if acc.last&.second&.timestamp == row.first.timestamp
+          # Merge this with last
+          acc.last = ValueCharge.new(acc.last.first, row.last.second)
+        else
+          acc.push row
+        end
+        acc
+      end
     end
   end
 end
